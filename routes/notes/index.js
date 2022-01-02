@@ -1,4 +1,8 @@
+const NotesDAL = require("./notesDAL");
 module.exports = async function (fastify, opts, next) {
+  const notesDAL = NotesDAL(fastify.db);
+
+
   fastify.route({
     method: "GET",
     url: "/notes",
@@ -10,6 +14,7 @@ module.exports = async function (fastify, opts, next) {
           type: "array",
           items: {
             type: "object",
+
             properties: {
               id: { type: "number", description: "Unique identifier" },
               title: { type: "string" },
@@ -29,17 +34,18 @@ module.exports = async function (fastify, opts, next) {
     schema: {
       tags: ["Notes"],
       description: "Create A Notes",
-      body:{
+      body: {
         type: "object",
-        required:['title','body'] ,
-        properties:{
-            title:{type:'string'},
-            body:{type:'string'},
-        }
+        required: ["title", "body"],
+        properties: {
+          title: { type: "string" },
+          body: { type: "string" },
+        },
       },
       response: {
         200: {
-          type: "array",
+          type: "object",
+          required: ["id", "title", "body"],
           items: {
             type: "object",
             properties: {
@@ -52,7 +58,9 @@ module.exports = async function (fastify, opts, next) {
       },
     },
     handler: async (req, res) => {
-      return [];
+      const { title, body } = req.body;
+      const newNote = await notesDAL.createNote(title,body);
+      return newNote;
     },
   });
 
@@ -62,21 +70,20 @@ module.exports = async function (fastify, opts, next) {
     schema: {
       tags: ["Notes"],
       description: "Update A Notes by Id",
-      params:{
+      params: {
         type: "object",
-        required:['id'],
-        properties:{
-            id:{type:'number'},
-          
-        } 
+        required: ["id"],
+        properties: {
+          id: { type: "number" },
+        },
       },
-      body:{
+      body: {
         type: "object",
-        required:['title','body'] ,
-        properties:{
-            title:{type:'string'},
-            body:{type:'string'},
-        }
+        required: ["title", "body"],
+        properties: {
+          title: { type: "string" },
+          body: { type: "string" },
+        },
       },
       response: {
         200: {
@@ -103,22 +110,22 @@ module.exports = async function (fastify, opts, next) {
     schema: {
       tags: ["Notes"],
       description: "Delete a Note",
-      params:{
+      params: {
         type: "object",
-        required:['id'],
-        properties:{
-            id:{type:'number'},
-          
-        } 
+        required: ["id"],
+        properties: {
+          id: { type: "number" },
+        },
       },
       response: {
         200: {
-         type:'string',default:'No Content'
+          type: "string",
+          default: "No Content",
         },
       },
     },
     handler: async (req, res) => {
-      return ;
+      return;
     },
   });
 
