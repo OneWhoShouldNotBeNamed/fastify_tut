@@ -1,7 +1,7 @@
+const { notesSchema } = require("./schemas");
 const NotesDAL = require("./notesDAL");
 module.exports = async function (fastify, opts, next) {
   const notesDAL = NotesDAL(fastify.db);
-
 
   fastify.route({
     method: "GET",
@@ -12,20 +12,12 @@ module.exports = async function (fastify, opts, next) {
       response: {
         200: {
           type: "array",
-          items: {
-            type: "object",
-
-            properties: {
-              id: { type: "number", description: "Unique identifier" },
-              title: { type: "string" },
-              body: { type: "string", description: "Body of the note" },
-            },
-          },
+          items: notesSchema,
         },
       },
     },
     handler: async (req, res) => {
-      return [];
+      return notesDAL.getNotes();
     },
   });
   fastify.route({
@@ -43,23 +35,12 @@ module.exports = async function (fastify, opts, next) {
         },
       },
       response: {
-        200: {
-          type: "object",
-          required: ["id", "title", "body"],
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "number", description: "Unique identifier" },
-              title: { type: "string" },
-              body: { type: "string", description: "Body of the note" },
-            },
-          },
-        },
+        200: notesSchema,
       },
     },
     handler: async (req, res) => {
       const { title, body } = req.body;
-      const newNote = await notesDAL.createNote(title,body);
+      const newNote = await notesDAL.createNote(title, body);
       return newNote;
     },
   });
@@ -86,21 +67,14 @@ module.exports = async function (fastify, opts, next) {
         },
       },
       response: {
-        200: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              id: { type: "number", description: "Unique identifier" },
-              title: { type: "string" },
-              body: { type: "string", description: "Body of the note" },
-            },
-          },
-        },
+        200: notesSchema,
       },
     },
     handler: async (req, res) => {
-      return [];
+      const { id } = req.params;
+      const { title, body } = req.body;
+      const updateNote = await notesDAL.updateNote(id, title, body);
+      return updateNote;
     },
   });
 
@@ -125,7 +99,8 @@ module.exports = async function (fastify, opts, next) {
       },
     },
     handler: async (req, res) => {
-      return;
+      await notesDAL.deleteNote(req.params.id);
+      res.status(204);
     },
   });
 
